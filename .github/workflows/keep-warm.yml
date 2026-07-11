@@ -13,7 +13,9 @@ name: keep-warm
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    # Offset off the top-of-hour (:00,:10,…) where GitHub queues a flood of jobs and
+    # drops high-frequency crons — odd-offset minutes fire far more reliably.
+    - cron: "5,15,25,35,45,55 * * * *"
   workflow_dispatch: {}
 
 jobs:
