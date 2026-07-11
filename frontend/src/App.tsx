@@ -55,11 +55,19 @@ export default function App() {
     setTab("prompt");
   }
 
+  // After a live grade, jump to the result so it's always visible — otherwise a
+  // KEEP verdict sorts to the bottom of the weakest-first library and looks like
+  // nothing happened.
+  function handleGraded(row: Row) {
+    upsertRow(row);
+    selectPrompt(row.prompt.id);
+  }
+
   const view = useMemo(() => {
     switch (tab) {
       case "library":
         return (
-          <Library rows={rows} onSelect={selectPrompt} onGraded={upsertRow} />
+          <Library rows={rows} onSelect={selectPrompt} onGraded={handleGraded} />
         );
       case "prompt":
         return <PromptDetail id={selectedId} onRefreshed={upsertRow} />;
