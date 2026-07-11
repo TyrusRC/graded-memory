@@ -63,12 +63,10 @@ Frontend `frontend/src/`: `components/{Library,PromptDetail,Capability,NewHire,G
 - Never hardcode or commit secrets or `.env`. Never disable TLS verification. Avoid `eval`,
   `shell=True` with untrusted input, unsafe deserialization, and weak crypto.
 
-## Git & deploy
+## Git
 
-- Branch off `main` for features; small commits with a clear *why*.
-- Commit as **TyrusRC <63230297+TyrusRC@users.noreply.github.com>**. Do not add co-authors.
-- Ask the user to review before pushing; never force-push or rewrite pushed history; never
-  bypass hooks (`--no-verify`) unless asked.
-- Deploy: frontend → Firebase Hosting (`graded-memory.web.app`); backend → Render
-  (`graded-memory-api.onrender.com`, auto-deploys on push to `main`). The MCP server and the
-  `mcp` extra are **not** part of the deploy. Frontend prod build reads `frontend/.env.production`.
+- Branch off `main` for features; keep commits small with a clear *why*.
+- Never commit secrets or `.env`. Don't force-push or rewrite pushed history, and don't
+  bypass hooks (`--no-verify`).
+- The MCP server and the `mcp` extra are not part of the production build. See the README
+  "Self-hosting" section for how to build and deploy your own instance.
