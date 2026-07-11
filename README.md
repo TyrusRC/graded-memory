@@ -168,17 +168,19 @@ integrate against the API directly.
 - **Audit export + control mapping.** Append-only log (CSV export) mapped to EU AI Act /
   NIST AI RMF / SR 26-2 — the evidence an auditor asks for.
 
-**Roadmap toward enterprise integration**
+**Roadmap toward enterprise integration** — all open-source and self-hostable, no paid dependencies
 
 - **MCP server** — expose `grade_asset`, `find_prior_art`, and `capability_gaps` as
   [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) tools
-  so any AI agent can call them mid-task.
-- **LLM-gateway guardrail** — a pre-call hook for LiteLLM / Portkey that grades and
-  blocks unsafe prompts in-flight.
-- **Multi-tenancy + SSO/RBAC** — org-scoped data on Postgres, SAML/OIDC via a provider
-  (e.g. WorkOS), role-based access, then SCIM.
+  (open-source SDK) so any AI agent can call them mid-task.
+- **LLM-gateway guardrail** — a pre-call hook for the open-source, self-hosted
+  [LiteLLM](https://docs.litellm.ai/docs/simple_proxy) proxy that grades and blocks
+  unsafe prompts in-flight.
+- **Multi-tenancy + RBAC** — org-scoped data on Postgres with role-based access, built
+  in-app. Standards-based **SSO (OIDC/SAML)** via a self-hosted open-source identity
+  provider (e.g. Keycloak / Authentik) — no paid identity vendor.
 - **Capture connectors** — GitHub App (grade prompts in PRs), Confluence, Slack, Drive.
-- **Compliance** — SOC 2, measured judge reliability on a labeled evaluation set.
+- **Judge reliability** — measured on a labeled evaluation set.
 
 ## Tests
 
