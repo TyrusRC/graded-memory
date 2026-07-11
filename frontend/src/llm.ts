@@ -27,6 +27,7 @@ export interface Provider {
 export const PROVIDERS: Provider[] = [
   { id: "openrouter", label: "OpenRouter — any model", baseUrl: "https://openrouter.ai/api/v1", modelHint: "anthropic/claude-3.5-sonnet" },
   { id: "openai", label: "OpenAI", baseUrl: "https://api.openai.com/v1", modelHint: "gpt-4o-mini" },
+  { id: "gemini", label: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai/", modelHint: "gemini-2.5-flash" },
   { id: "qwen", label: "Alibaba Qwen (DashScope)", baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", modelHint: "qwen-plus" },
   { id: "groq", label: "Groq", baseUrl: "https://api.groq.com/openai/v1", modelHint: "llama-3.3-70b-versatile" },
   { id: "deepseek", label: "DeepSeek", baseUrl: "https://api.deepseek.com/v1", modelHint: "deepseek-chat" },
