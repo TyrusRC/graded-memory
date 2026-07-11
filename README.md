@@ -151,6 +151,35 @@ POST /api/override               human override + recalibrate
 LLM config is passed per-request via `X-LLM-Base-Url` / `X-LLM-Api-Key` / `X-LLM-Model`
 headers (bring-your-own-key) and is never stored server-side.
 
+Because the backend is FastAPI, an interactive **OpenAPI** spec is served automatically
+at `/docs` (Swagger UI) and `/openapi.json` — so a business can generate a client and
+integrate against the API directly.
+
+## Integration & enterprise
+
+**Available today**
+
+- **Self-hostable and fully offline.** The deterministic core (scan, grade, reuse,
+  capability map) runs with no external calls and redacts before any model call — an
+  on-prem / air-gapped deployment for regulated buyers and data-sovereignty regimes.
+- **REST API + OpenAPI.** Integrate over HTTP; generate a client from `/openapi.json`.
+- **Bring-your-own-key, provider-agnostic.** Point it at any OpenAI-compatible endpoint;
+  keys are per-request and never stored.
+- **Audit export + control mapping.** Append-only log (CSV export) mapped to EU AI Act /
+  NIST AI RMF / SR 26-2 — the evidence an auditor asks for.
+
+**Roadmap toward enterprise integration**
+
+- **MCP server** — expose `grade_asset`, `find_prior_art`, and `capability_gaps` as
+  [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) tools
+  so any AI agent can call them mid-task.
+- **LLM-gateway guardrail** — a pre-call hook for LiteLLM / Portkey that grades and
+  blocks unsafe prompts in-flight.
+- **Multi-tenancy + SSO/RBAC** — org-scoped data on Postgres, SAML/OIDC via a provider
+  (e.g. WorkOS), role-based access, then SCIM.
+- **Capture connectors** — GitHub App (grade prompts in PRs), Confluence, Slack, Drive.
+- **Compliance** — SOC 2, measured judge reliability on a labeled evaluation set.
+
 ## Tests
 
 ```bash
