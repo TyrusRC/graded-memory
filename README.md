@@ -167,12 +167,36 @@ integrate against the API directly.
   keys are per-request and never stored.
 - **Audit export + control mapping.** Append-only log (CSV export) mapped to EU AI Act /
   NIST AI RMF / SR 26-2 — the evidence an auditor asks for.
+- **MCP server.** Exposes the deterministic core to any [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol)
+  client — five agent-callable tools: `grade_asset`, `remediate_asset`, `find_prior_art`,
+  `search_memory`, `capability_gaps`. No key required. Run it:
+  ```bash
+  cd backend && pip install ".[mcp]" && python -m app.mcp_server
+  ```
+  Connect it to **Claude** (Desktop / Code) or **OpenAI Codex** — both read this server the
+  same way. Claude Desktop (`claude_desktop_config.json`) or Cursor:
+  ```json
+  {
+    "mcpServers": {
+      "graded-memory": {
+        "command": "/ABS/PATH/graded-memory/backend/.venv/bin/python",
+        "args": ["-m", "app.mcp_server"],
+        "env": { "GM_DB": "/ABS/PATH/graded-memory/backend/graded.sqlite" }
+      }
+    }
+  }
+  ```
+  OpenAI Codex (`~/.codex/config.toml`):
+  ```toml
+  [mcp_servers.graded-memory]
+  command = "/ABS/PATH/graded-memory/backend/.venv/bin/python"
+  args = ["-m", "app.mcp_server"]
+  env = { GM_DB = "/ABS/PATH/graded-memory/backend/graded.sqlite" }
+  ```
+  Codex also reads this repo's `AGENTS.md` natively, so it follows the project rules too.
 
 **Roadmap toward enterprise integration** — all open-source and self-hostable, no paid dependencies
 
-- **MCP server** — expose `grade_asset`, `find_prior_art`, and `capability_gaps` as
-  [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) tools
-  (open-source SDK) so any AI agent can call them mid-task.
 - **LLM-gateway guardrail** — a pre-call hook for the open-source, self-hosted
   [LiteLLM](https://docs.litellm.ai/docs/simple_proxy) proxy that grades and blocks
   unsafe prompts in-flight.
