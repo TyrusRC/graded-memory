@@ -3,6 +3,8 @@
 *.env
 .env.*
 !.env.example
+# Public build config (backend URL, not a secret) — safe to commit so builds are reproducible
+!frontend/.env.production
 
 # Python
 __pycache__/
