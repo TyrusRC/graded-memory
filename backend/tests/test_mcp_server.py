@@ -24,6 +24,21 @@ def test_grade_asset_tolerates_bad_kind():
     assert g["grade"] in ("KEEP", "REVISE", "RETIRE")
 
 
+def test_remediate_asset_masks_secret_and_upgrades():
+    out = m.remediate_asset("connect using AKIAIOSFODNN7EXAMPLE to prod")
+    assert "AKIAIOSFODNN7EXAMPLE" not in out["remediated_text"]   # secret masked
+    assert out["grade"] != "RETIRE"                                # no longer a high-sev leak
+    assert not any(r["severity"] == "high" for r in out["risks_remaining"])
+
+
+def test_search_memory_filters_and_shapes():
+    hits = m.search_memory("ticket", grade="KEEP", limit=5)
+    assert isinstance(hits, list) and len(hits) <= 5
+    for h in hits:
+        assert {"source", "kind", "grade", "preview"} <= set(h)
+        assert h["grade"] == "KEEP"                                # grade filter honored
+
+
 def test_tool_return_shapes():
     art = m.find_prior_art("summarize a support ticket", top_n=3)
     assert isinstance(art, list)
