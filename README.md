@@ -131,6 +131,55 @@ Live grading with a real model is optional and bring-your-own-key. Two ways to e
 Either way, prompts are redacted locally before any model call, and the deterministic
 safety gate overrides the model on high-severity risks.
 
+## Self-hosting
+
+Graded Memory is fully self-hostable and needs **no external services** — the
+deterministic core (grade, reuse, capability map) runs offline, so no API key is
+required and, with no key, **nothing leaves your host**. Suitable for on-prem /
+air-gapped / data-sovereignty deployments.
+
+**Prerequisites:** Python ≥ 3.11, Node ≥ 18, git.
+
+**1. Backend** (from `backend/`):
+```bash
+python -m venv .venv && . .venv/bin/activate
+pip install .                      # add ".[mcp]" to also run the MCP server
+python scripts/seed_offline.py     # seed the SQLite DB (34 synthetic assets)
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+**2. Frontend** — build the static site pointed at your backend, then serve `dist/` with
+any static server (from `frontend/`):
+```bash
+npm install
+VITE_API_BASE=https://your-host:8000/api npm run build
+npx serve dist -l 5173             # or nginx / Caddy / any static host
+```
+For a single origin with no CORS, put both behind one reverse proxy — `/` → `frontend/dist`,
+`/api` → `http://127.0.0.1:8000` — and build with `VITE_API_BASE=/api`.
+
+**3. Use it.** Open the site: the library grades **offline out of the box**. To enable
+live agentic grading, either click the header status dot and paste your own provider
+(bring-your-own-key, stays in your browser), or set the operator env vars below and
+restart the backend.
+
+**Configuration** (all optional; set in `backend/.env` or the process environment):
+
+| Variable | Effect |
+|---|---|
+| `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` | operator-wide live grading via any OpenAI-compatible provider |
+| `GM_OFFLINE=1` | force deterministic grading even if a key is configured |
+| `GM_WEBHOOK_URLS` / `GM_WEBHOOK_SECRET` | outbound (HMAC-signed) webhooks on grade / remediate / override |
+| `GM_DB` | path to the SQLite file (default `graded.sqlite` in the working directory) |
+
+**Persistence & production notes:**
+- State lives in the `GM_DB` SQLite file (default `backend/graded.sqlite`) — back it up to
+  keep grades and the audit log; re-run `seed_offline.py` only to reset to the sample set.
+- Run `uvicorn` behind a reverse proxy with TLS; add `--workers N` for throughput (workers
+  share the SQLite file — fine for read-heavy use; move to Postgres for high write volume).
+- The MCP server (`python -m app.mcp_server`) and outbound webhooks are optional add-ons;
+  neither is required to run the app.
+
 ## API
 
 ```
