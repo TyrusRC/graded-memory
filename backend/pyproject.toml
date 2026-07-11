@@ -12,6 +12,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# Optional: run the Model Context Protocol server (app/mcp_server.py) so AI agents can
+# call grade/find-prior-art/capability tools. Not needed by the web app or the deploy.
+mcp = ["mcp>=1.2"]
 
 [tool.setuptools]
 packages = ["app"]
