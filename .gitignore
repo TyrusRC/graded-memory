@@ -1,0 +1,26 @@
+# Secrets — NEVER commit
+.env
+*.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / frontend
+node_modules/
+dist/
+
+# Local working docs (kept out of the repo by request)
+docs/
+
+# Local DB / OS cruft (regenerable via scripts/seed_offline.py)
+*.sqlite
+*.sqlite3
+*.db
+.DS_Store
