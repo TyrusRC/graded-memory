@@ -194,6 +194,10 @@ integrate against the API directly.
   env = { GM_DB = "/ABS/PATH/graded-memory/backend/graded.sqlite" }
   ```
   Codex also reads this repo's `AGENTS.md` natively, so it follows the project rules too.
+- **Webhooks (push).** Set `GM_WEBHOOK_URLS` (comma-separated) to POST an event on every
+  grade / remediate / override — so CI, Slack, or a SIEM can *react* (e.g. fail a deploy
+  on RETIRE). Payloads are HMAC-SHA256 signed (`X-GM-Signature`) when `GM_WEBHOOK_SECRET`
+  is set. Events: `asset.graded`, `asset.remediated`, `asset.overridden`.
 
 **Roadmap toward enterprise integration** — all open-source and self-hostable, no paid dependencies
 

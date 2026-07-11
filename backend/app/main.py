@@ -1,6 +1,6 @@
 from __future__ import annotations
 import csv, io, hashlib
-from fastapi import FastAPI, HTTPException, Header, Depends
+from fastapi import FastAPI, HTTPException, Header, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -9,7 +9,7 @@ from app.models import Prompt, Override, AuditEntry
 from app.live import safe_grade, safe_remediate
 from app.llm import LLMConfig, LLMError, has_llm, ping
 from app.calibration import apply_override
-from app import reuse, analytics
+from app import reuse, analytics, webhooks
 
 db = DB()
 db.init()
@@ -82,7 +82,7 @@ def llm_status(cfg: LLMConfig = Depends(llm_cfg)):
         return {"mode": "offline", "online": False, "configured": True, "error": str(e)}
 
 @app.post("/api/grade")
-def live_grade(req: GradeReq, cfg: LLMConfig = Depends(llm_cfg)):
+def live_grade(req: GradeReq, background: BackgroundTasks, cfg: LLMConfig = Depends(llm_cfg)):
     pid = "live-" + hashlib.sha1(req.text.encode()).hexdigest()[:8]
     p = Prompt(id=pid, source="live-demo", raw_text=req.text, tags=["live"],
                kind=req.kind, context=req.context)
@@ -91,16 +91,21 @@ def live_grade(req: GradeReq, cfg: LLMConfig = Depends(llm_cfg)):
     db.save_grading(g)
     db.add_audit(AuditEntry(prompt_id=pid, action="graded", grade=g.grade,
                             detail=f"live; {len(g.risks_found)} risk(s)"))
+    background.add_task(webhooks.emit, "asset.graded",
+                        {"prompt_id": pid, "grade": g.grade, "kind": p.kind,
+                         "risks": len(g.risks_found), "source": p.source})
     return _row(pid)
 
 @app.post("/api/remediate/{pid}")
-def live_remediate(pid: str, cfg: LLMConfig = Depends(llm_cfg)):
+def live_remediate(pid: str, background: BackgroundTasks, cfg: LLMConfig = Depends(llm_cfg)):
     p = db.get_prompt(pid)
     if not p:
         raise HTTPException(404)
     fixed, g = safe_remediate(p, cfg)
     db.upsert_prompt(fixed); db.save_grading(g)
     db.add_audit(AuditEntry(prompt_id=pid, action="remediated", grade=g.grade, detail="rewrite+re-judge"))
+    background.add_task(webhooks.emit, "asset.remediated",
+                        {"prompt_id": pid, "grade": g.grade, "kind": fixed.kind})
     return _row(pid)
 
 class OverrideReq(BaseModel):
@@ -109,12 +114,15 @@ class OverrideReq(BaseModel):
     reason: str
 
 @app.post("/api/override")
-def override(req: OverrideReq):
+def override(req: OverrideReq, background: BackgroundTasks):
     cur = db.latest_grading(req.prompt_id)
     if not cur:
         raise HTTPException(404)
     changed = apply_override(db, Override(prompt_id=req.prompt_id, from_grade=cur.grade,
                                           to_grade=req.to_grade, reason=req.reason))
+    background.add_task(webhooks.emit, "asset.overridden",
+                        {"prompt_id": req.prompt_id, "from_grade": cur.grade,
+                         "to_grade": req.to_grade, "recalibrated": len(changed)})
     return {"changed": changed, "count": len(changed)}
 
 class ReuseReq(BaseModel):
