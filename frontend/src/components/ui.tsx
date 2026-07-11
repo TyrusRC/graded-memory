@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { Grade } from "../types";
+import type { Grade, Kind } from "../types";
+import { useT } from "../i18n";
 
 const gradeStamp: Record<Grade, string> = {
   KEEP: "stamp-keep",
@@ -47,6 +48,20 @@ export function RiskChip({
 
 export function Tag({ children }: { children: React.ReactNode }) {
   return <span className="tag">{children}</span>;
+}
+
+// Small typed-asset label. A "Prompt" now stands for any reusable AI asset;
+// the kind tells you whether it's a bare prompt, a multi-step workflow, or an
+// agent config. Distinct theme tones keep them scannable in a mixed library.
+const KIND_TONE: Record<Kind, string> = {
+  prompt: "text-muted",
+  workflow: "text-revise",
+  agent: "text-keep",
+};
+
+export function KindBadge({ kind }: { kind: Kind }) {
+  const t = useT();
+  return <span className={`tag ${KIND_TONE[kind]}`}>{t(`kind.${kind}`)}</span>;
 }
 
 const STATUS_META = {

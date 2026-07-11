@@ -9,6 +9,7 @@ from app.models import Prompt, Override, AuditEntry
 from app.live import safe_grade, safe_remediate
 from app.llm import LLMConfig, LLMError, has_llm, ping
 from app.calibration import apply_override
+from app import reuse, analytics
 
 db = DB()
 db.init()
@@ -65,6 +66,8 @@ def calibration():
 
 class GradeReq(BaseModel):
     text: str
+    kind: str = "prompt"
+    context: str = ""
 
 @app.get("/api/llm/status")
 def llm_status(cfg: LLMConfig = Depends(llm_cfg)):
@@ -81,7 +84,8 @@ def llm_status(cfg: LLMConfig = Depends(llm_cfg)):
 @app.post("/api/grade")
 def live_grade(req: GradeReq, cfg: LLMConfig = Depends(llm_cfg)):
     pid = "live-" + hashlib.sha1(req.text.encode()).hexdigest()[:8]
-    p = Prompt(id=pid, source="live-demo", raw_text=req.text, tags=["live"])
+    p = Prompt(id=pid, source="live-demo", raw_text=req.text, tags=["live"],
+               kind=req.kind, context=req.context)
     db.upsert_prompt(p)
     g = safe_grade(p, cfg)
     db.save_grading(g)
@@ -112,3 +116,31 @@ def override(req: OverrideReq):
     changed = apply_override(db, Override(prompt_id=req.prompt_id, from_grade=cur.grade,
                                           to_grade=req.to_grade, reason=req.reason))
     return {"changed": changed, "count": len(changed)}
+
+class ReuseReq(BaseModel):
+    text: str
+    kind: str | None = None
+
+@app.post("/api/reuse")
+def reuse_matches(req: ReuseReq):
+    """P5 reuse surface: top-3 KEEP prior artifacts most similar to a new task's text."""
+    prompts = db.list_prompts()
+    gradings = {p.id: g for p in prompts if (g := db.latest_grading(p.id))}
+    hits = reuse.find_similar(req.text, prompts, gradings, top_n=3,
+                              only_grade="KEEP", kind=req.kind)
+    by_id = {p.id: p for p in prompts}
+    matches = []
+    for h in hits:
+        p = by_id[h["prompt_id"]]
+        g = gradings.get(p.id)
+        matches.append({"prompt": p.model_dump(),
+                        "grading": g.model_dump() if g else None,
+                        "score": h["score"]})
+    return {"matches": matches}
+
+@app.get("/api/analytics")
+def capability_analytics():
+    """P5 capability analytics: composition, duplicates, coverage gaps, growth."""
+    prompts = db.list_prompts()
+    gradings = {p.id: g for p in prompts if (g := db.latest_grading(p.id))}
+    return analytics.capability_report(prompts, gradings, db.list_audit())

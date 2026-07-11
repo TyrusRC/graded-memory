@@ -20,7 +20,8 @@ class DB:
         with self._conn() as c:
             c.executescript("""
             CREATE TABLE IF NOT EXISTS prompts(
-              id TEXT PRIMARY KEY, source TEXT, raw_text TEXT, tags TEXT);
+              id TEXT PRIMARY KEY, source TEXT, raw_text TEXT, tags TEXT,
+              kind TEXT DEFAULT 'prompt', context TEXT DEFAULT '');
             CREATE TABLE IF NOT EXISTS gradings(
               prompt_id TEXT, grade TEXT, rubric TEXT, rationale TEXT,
               risks TEXT, control_map TEXT, model TEXT, ts TEXT,
@@ -37,24 +38,34 @@ class DB:
             cols = {row["name"] for row in c.execute("PRAGMA table_info(gradings)")}
             if "foreseen" not in cols:
                 c.execute("ALTER TABLE gradings ADD COLUMN foreseen TEXT DEFAULT '[]'")
+            # Migration: add kind + context to a prompts table created before they existed.
+            pcols = {row["name"] for row in c.execute("PRAGMA table_info(prompts)")}
+            if "kind" not in pcols:
+                c.execute("ALTER TABLE prompts ADD COLUMN kind TEXT DEFAULT 'prompt'")
+            if "context" not in pcols:
+                c.execute("ALTER TABLE prompts ADD COLUMN context TEXT DEFAULT ''")
 
     # --- prompts ---
     def upsert_prompt(self, p: Prompt) -> None:
         with self._conn() as c:
-            c.execute("INSERT OR REPLACE INTO prompts VALUES (?,?,?,?)",
-                      (p.id, p.source, p.raw_text, json.dumps(p.tags)))
+            c.execute(
+                "INSERT OR REPLACE INTO prompts"
+                " (id, source, raw_text, tags, kind, context) VALUES (?,?,?,?,?,?)",
+                (p.id, p.source, p.raw_text, json.dumps(p.tags), p.kind, p.context))
+
+    def _prompt(self, r: sqlite3.Row) -> Prompt:
+        return Prompt(id=r["id"], source=r["source"], raw_text=r["raw_text"],
+                      tags=json.loads(r["tags"]), kind=r["kind"], context=r["context"])
 
     def get_prompt(self, pid: str) -> Prompt | None:
         with self._conn() as c:
             r = c.execute("SELECT * FROM prompts WHERE id=?", (pid,)).fetchone()
-        return Prompt(id=r["id"], source=r["source"], raw_text=r["raw_text"],
-                      tags=json.loads(r["tags"])) if r else None
+        return self._prompt(r) if r else None
 
     def list_prompts(self) -> list[Prompt]:
         with self._conn() as c:
             rows = c.execute("SELECT * FROM prompts").fetchall()
-        return [Prompt(id=r["id"], source=r["source"], raw_text=r["raw_text"],
-                       tags=json.loads(r["tags"])) for r in rows]
+        return [self._prompt(r) for r in rows]
 
     # --- gradings ---
     def save_grading(self, g: Grading) -> None:

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Row } from "../types";
 import { api } from "../api";
-import { Spinner } from "./ui";
+import { KindBadge, Spinner } from "./ui";
 import { useT } from "../i18n";
 
 function firstLine(text: string): string {
@@ -33,7 +33,13 @@ export default function NewHire({
     <div className="space-y-8">
       <div className="panel border-keep/25 p-8 text-center">
         <p className="eyebrow mb-3">{t("nh.certified")}</p>
-        <p className="text-2xl font-semibold text-paper sm:text-3xl">
+        <h2 className="text-2xl font-semibold text-paper sm:text-3xl">
+          {t("nh.handoff_title")}
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-sm text-muted">
+          {t("nh.handoff_intro")}
+        </p>
+        <p className="mt-5 text-xl font-semibold text-paper sm:text-2xl">
           {t("nh.day_one")}{" "}
           <span className="font-mono text-keep">{rows.length}</span>{" "}
           {t("nh.verified_safe")}{" "}
@@ -56,9 +62,12 @@ export default function NewHire({
               onClick={() => onSelect(row.prompt.id)}
               className="panel flex w-full min-w-0 flex-col items-start gap-1.5 p-4 text-left transition hover:border-keep/40"
             >
-              <span className="w-full truncate font-mono text-xs text-keep/80">
-                {row.prompt.source}
-              </span>
+              <div className="flex w-full items-center gap-2">
+                <span className="min-w-0 flex-1 truncate font-mono text-xs text-keep/80">
+                  {row.prompt.source}
+                </span>
+                <KindBadge kind={row.prompt.kind} />
+              </div>
               <span className="w-full break-words text-sm text-paper/90">
                 {firstLine(row.prompt.raw_text)}
               </span>

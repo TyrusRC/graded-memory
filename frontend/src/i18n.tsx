@@ -17,9 +17,14 @@ const DICT: Record<string, { en: string; vi: string }> = {
   "nav.governance": { en: "Governance", vi: "Quản trị" },
   "nav.calibration": { en: "Calibration", vi: "Hiệu chỉnh" },
   "nav.newhire": { en: "New hire", vi: "Nhân sự mới" },
+  "nav.capability": { en: "Capability", vi: "Năng lực" },
   "app.loading_library": { en: "Loading library…", vi: "Đang tải thư viện…" },
 
   "filter.all": { en: "ALL", vi: "TẤT CẢ" },
+
+  "kind.prompt": { en: "Prompt", vi: "Prompt" },
+  "kind.workflow": { en: "Workflow", vi: "Quy trình" },
+  "kind.agent": { en: "Agent", vi: "Agent" },
 
   "lib.grade_new": {
     en: "Grade a new prompt",
@@ -30,6 +35,15 @@ const DICT: Record<string, { en: string; vi: string }> = {
     vi: "Dán một prompt để chấm điểm trực tiếp…",
   },
   "lib.grade_live": { en: "Grade live", vi: "Chấm trực tiếp" },
+  "lib.kind": { en: "Kind", vi: "Loại" },
+  "lib.context_label": {
+    en: "Context (why it worked / when to use)",
+    vi: "Bối cảnh (vì sao hiệu quả / khi nào dùng)",
+  },
+  "lib.context_placeholder": {
+    en: "Optional — note why this worked or when to use it…",
+    vi: "Tùy chọn — ghi vì sao hiệu quả hoặc khi nào dùng…",
+  },
   "lib.grading": { en: "Grading…", vi: "Đang chấm…" },
   "lib.grading_failed": { en: "Grading failed", vi: "Chấm điểm thất bại" },
   "lib.search_placeholder": {
@@ -37,6 +51,24 @@ const DICT: Record<string, { en: string; vi: string }> = {
     vi: "Tìm theo nguồn hoặc nội dung…",
   },
   "lib.no_match": { en: "No prompts match.", vi: "Không có prompt nào khớp." },
+
+  "reuse.title": {
+    en: "Prior art for this task",
+    vi: "Kết quả có sẵn cho tác vụ này",
+  },
+  "reuse.help": {
+    en: "Verified assets the org already built for similar work — reuse before you rebuild.",
+    vi: "Những tài sản đã kiểm chứng mà tổ chức đã xây cho công việc tương tự — tái sử dụng trước khi làm lại.",
+  },
+  "reuse.searching": {
+    en: "Searching prior art…",
+    vi: "Đang tìm kết quả có sẵn…",
+  },
+  "reuse.none": {
+    en: "No prior art found — this looks like new capability.",
+    vi: "Không tìm thấy kết quả có sẵn — đây có vẻ là năng lực mới.",
+  },
+  "reuse.match": { en: "{score}% match", vi: "khớp {score}%" },
 
   "pd.select_prompt": {
     en: "Select a prompt from the Library to inspect its grade.",
@@ -76,6 +108,10 @@ const DICT: Record<string, { en: string; vi: string }> = {
   "pd.remediation_failed": {
     en: "Remediation failed",
     vi: "Khắc phục thất bại",
+  },
+  "pd.context": {
+    en: "Why it worked / when to use",
+    vi: "Vì sao hiệu quả / khi nào dùng",
   },
   "pd.rationale": { en: "Rationale", vi: "Lý do" },
   "pd.foreseen_actions": {
@@ -161,6 +197,14 @@ const DICT: Record<string, { en: string; vi: string }> = {
   },
 
   "nh.certified": { en: "Certified for handoff", vi: "Đã chứng nhận để bàn giao" },
+  "nh.handoff_title": {
+    en: "When someone leaves, their memory stays",
+    vi: "Khi một người rời đi, ký ức của họ vẫn ở lại",
+  },
+  "nh.handoff_intro": {
+    en: "Every verified-safe AI asset a departing employee built transfers to their replacement on day one — no lost prompts, no leaked ones.",
+    vi: "Mọi tài sản AI an toàn đã kiểm chứng mà nhân viên rời đi tạo ra sẽ chuyển cho người thay thế ngay ngày đầu — không mất prompt, không rò rỉ.",
+  },
   "nh.day_one": { en: "Day one:", vi: "Ngày đầu tiên:" },
   "nh.verified_safe": {
     en: "verified-safe prompts,",
@@ -172,6 +216,45 @@ const DICT: Record<string, { en: string; vi: string }> = {
     vi: "Mọi mục bên dưới đều được chấm KEEP và sẵn sàng bàn giao cho nhân sự mới.",
   },
   "nh.load_failed": { en: "Failed to load", vi: "Không tải được" },
+
+  "cap.title": { en: "Capability map", vi: "Bản đồ năng lực" },
+  "cap.intro": {
+    en: "Where organizational AI capability is growing, duplicated, or missing.",
+    vi: "Nơi năng lực AI của tổ chức đang tăng trưởng, trùng lặp, hoặc thiếu hụt.",
+  },
+  "cap.load_failed": {
+    en: "Failed to load analytics",
+    vi: "Không tải được phân tích",
+  },
+  "cap.by_kind": { en: "Assets by kind", vi: "Tài sản theo loại" },
+  "cap.coverage": { en: "Coverage by tag", vi: "Độ phủ theo thẻ" },
+  "cap.col_tag": { en: "Tag", vi: "Thẻ" },
+  "cap.col_total": { en: "Total", vi: "Tổng" },
+  "cap.duplicates": { en: "Duplicated capability", vi: "Năng lực trùng lặp" },
+  "cap.duplicates_none": {
+    en: "No duplication detected.",
+    vi: "Không phát hiện trùng lặp.",
+  },
+  "cap.duplicates_note": {
+    en: "These assets overlap heavily — consolidate into one source of truth.",
+    vi: "Các tài sản này trùng lặp nhiều — hãy hợp nhất thành một nguồn duy nhất.",
+  },
+  "cap.gaps": { en: "Missing capability", vi: "Năng lực thiếu hụt" },
+  "cap.gaps_none": {
+    en: "No coverage gaps — every tag has a verified KEEP asset.",
+    vi: "Không có lỗ hổng — mọi thẻ đều có tài sản KEEP đã kiểm chứng.",
+  },
+  "cap.gaps_note": {
+    en: "Tags with assets but zero graded-KEEP coverage.",
+    vi: "Các thẻ có tài sản nhưng chưa có mục KEEP nào được chấm.",
+  },
+  "cap.growth": { en: "Grading activity", vi: "Hoạt động chấm điểm" },
+  "cap.growth_none": {
+    en: "No grading activity recorded yet.",
+    vi: "Chưa ghi nhận hoạt động chấm điểm.",
+  },
+  "cap.graded_count": { en: "{n} graded", vi: "{n} lần chấm" },
+  "cap.match": { en: "{score}% overlap", vi: "trùng {score}%" },
 
   "common.loading": { en: "Loading…", vi: "Đang tải…" },
 

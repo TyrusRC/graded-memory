@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { PromptDetailRow, Rubric, Row } from "../types";
 import { api } from "../api";
-import { GradeBadge, Spinner, Tag, Term } from "./ui";
+import { GradeBadge, KindBadge, Spinner, Tag, Term } from "./ui";
 import { useT } from "../i18n";
 
 const RUBRIC_KEYS: (keyof Rubric)[] = [
@@ -110,7 +110,10 @@ export default function PromptDetail({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-mono text-xs text-muted">{prompt.source}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-mono text-xs text-muted">{prompt.source}</p>
+            <KindBadge kind={prompt.kind} />
+          </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {prompt.tags.map((t) => (
               <Tag key={t}>{t}</Tag>
@@ -144,6 +147,15 @@ export default function PromptDetail({
       <pre className="well overflow-x-auto whitespace-pre-wrap p-4 font-mono text-sm">
         {prompt.raw_text}
       </pre>
+
+      {prompt.context.trim() && (
+        <section>
+          <h3 className="eyebrow mb-2">{t("pd.context")}</h3>
+          <p className="text-sm leading-relaxed text-paper/90">
+            {prompt.context}
+          </p>
+        </section>
+      )}
 
       {grading && grading.grade === "REVISE" && (
         <div className="space-y-2">

@@ -20,8 +20,10 @@ class RubricScores(BaseModel):
 class Prompt(BaseModel):
     id: str
     source: str             # relative path within the corpus
-    raw_text: str
+    raw_text: str           # the artifact body for any kind (prompt / workflow steps / agent config)
     tags: list[str] = []
+    kind: Literal["prompt", "workflow", "agent"] = "prompt"
+    context: str = ""       # author's note: WHY this worked / when to use it (P5 "context capture")
 
 class Grading(BaseModel):
     prompt_id: str

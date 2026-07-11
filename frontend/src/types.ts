@@ -34,11 +34,38 @@ export interface LlmStatus {
   error?: string;
 }
 
+export type Kind = "prompt" | "workflow" | "agent";
+
 export interface Prompt {
   id: string;
   source: string;
   raw_text: string;
   tags: string[];
+  kind: Kind;
+  context: string;
+}
+
+export interface ReuseMatch {
+  prompt: Prompt;
+  grading: Grading | null;
+  score: number;
+}
+
+export interface Analytics {
+  by_kind: Record<string, number>;
+  by_tag: {
+    tag: string;
+    count: number;
+    keep: number;
+    revise: number;
+    retire: number;
+  }[];
+  duplicates: {
+    members: { prompt_id: string; source: string }[];
+    score: number;
+  }[];
+  growth: { date: string; graded_count: number }[];
+  coverage_gaps: string[];
 }
 
 export interface Row {

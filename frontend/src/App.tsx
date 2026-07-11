@@ -6,11 +6,18 @@ import PromptDetail from "./components/PromptDetail";
 import Governance from "./components/Governance";
 import Calibration from "./components/Calibration";
 import NewHire from "./components/NewHire";
+import Capability from "./components/Capability";
 import LlmSettings from "./components/LlmSettings";
 import { Spinner } from "./components/ui";
 import { useT, useLang, type Lang } from "./i18n";
 
-type Tab = "library" | "prompt" | "governance" | "calibration" | "newhire";
+type Tab =
+  | "library"
+  | "prompt"
+  | "governance"
+  | "calibration"
+  | "newhire"
+  | "capability";
 
 const TAB_IDS: Tab[] = [
   "library",
@@ -18,6 +25,7 @@ const TAB_IDS: Tab[] = [
   "governance",
   "calibration",
   "newhire",
+  "capability",
 ];
 
 const LANGS: Lang[] = ["en", "vi"];
@@ -78,6 +86,8 @@ export default function App() {
         return <Calibration rows={rows} />;
       case "newhire":
         return <NewHire onSelect={selectPrompt} />;
+      case "capability":
+        return <Capability />;
     }
   }, [tab, rows, selectedId]);
 

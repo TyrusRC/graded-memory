@@ -29,6 +29,12 @@ def _pid(source: str, text: str) -> str:
     return hashlib.sha1(f"{source}:{text[:64]}".encode()).hexdigest()[:12]
 
 
+def _kind(rel: str) -> str:
+    """Infer the asset kind from the top-level subfolder of its relative path."""
+    top = rel.replace("\\", "/").split("/")[0]
+    return {"workflows": "workflow", "agents": "agent"}.get(top, "prompt")
+
+
 _TOOLS = [
     {"type": "function", "function": {
         "name": "list_files",
@@ -107,5 +113,6 @@ def collect(root: str, cfg: LLMConfig | None = None) -> list[Prompt]:
     tags_by_source = {ft.source: ft.tags for ft in tagged.files}
 
     return [Prompt(id=_pid(rel, raw_by_source[rel]), source=rel,
-                   raw_text=raw_by_source[rel], tags=tags_by_source.get(rel, []))
+                   raw_text=raw_by_source[rel], tags=tags_by_source.get(rel, []),
+                   kind=_kind(rel))
             for rel in rels]

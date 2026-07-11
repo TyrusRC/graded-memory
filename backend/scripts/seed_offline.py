@@ -17,6 +17,11 @@ ROOT = "seed/org_prompts"
 def _pid(source: str, text: str) -> str:
     return hashlib.sha1(f"{source}:{text[:64]}".encode()).hexdigest()[:12]
 
+def _kind(rel: str) -> str:
+    """Infer the asset kind from the top-level subfolder of its relative path."""
+    top = rel.replace("\\", "/").split("/")[0]
+    return {"workflows": "workflow", "agents": "agent"}.get(top, "prompt")
+
 if __name__ == "__main__":
     if os.path.exists("graded.sqlite"):
         os.remove("graded.sqlite")
@@ -27,7 +32,7 @@ if __name__ == "__main__":
         rel = os.path.relpath(f, ROOT)
         raw = open(f, encoding="utf-8").read().strip()
         tag = rel.split("/")[0]                     # folder as the topical tag (enables calibration)
-        p = Prompt(id=_pid(rel, raw), source=rel, raw_text=raw, tags=[tag])
+        p = Prompt(id=_pid(rel, raw), source=rel, raw_text=raw, tags=[tag], kind=_kind(rel))
         db.upsert_prompt(p)
         g = offline_grade(p)
         db.save_grading(g)

@@ -6,6 +6,8 @@ import type {
   OverrideResult,
   Grade,
   LlmStatus,
+  ReuseMatch,
+  Analytics,
 } from "./types";
 import { llmHeaders } from "./llm";
 
@@ -48,12 +50,20 @@ export const api = {
 
   calibration: () => request<CalibrationRule[]>("/calibration"),
 
-  grade: (text: string) =>
+  grade: (text: string, kind = "prompt", context = "") =>
     request<Row>("/grade", {
       method: "POST",
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, kind, context }),
       llm: true,
     }),
+
+  reuse: (text: string, kind?: string) =>
+    request<{ matches: ReuseMatch[] }>("/reuse", {
+      method: "POST",
+      body: JSON.stringify({ text, kind: kind ?? null }),
+    }),
+
+  analytics: () => request<Analytics>("/analytics"),
 
   remediate: (id: string) =>
     request<Row>(`/remediate/${encodeURIComponent(id)}`, {
