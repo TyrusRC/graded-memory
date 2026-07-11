@@ -59,6 +59,10 @@ const DICT: Record<string, { en: string; vi: string }> = {
     en: "Quarantined — excluded from reuse and new-hire handoff.",
     vi: "Đã cách ly — không được tái sử dụng hay bàn giao cho nhân sự mới.",
   },
+  "pd.policy_forced": {
+    en: "Verdict set by the deterministic safety gate — a high-severity {category}, not the model's call.",
+    vi: "Phán quyết do cổng an toàn tất định quyết định — rủi ro {category} mức cao, không phải do mô hình.",
+  },
   "pd.now_what_retire": {
     en: "Now what? Notify the owner, then capture a safe replacement. The raw prompt is flagged, never auto-sanitized.",
     vi: "Giờ làm gì? Báo cho chủ sở hữu, rồi tạo bản thay thế an toàn. Prompt gốc bị gắn cờ, không bao giờ tự động chỉnh sửa.",

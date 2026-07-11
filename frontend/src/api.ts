@@ -7,7 +7,9 @@ import type {
   Grade,
 } from "./types";
 
-const BASE = "/api";
+// Relative in dev (Vite proxies /api → :8000); absolute in the hosted build,
+// where the frontend (Firebase) calls the backend (Render) cross-origin.
+const BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

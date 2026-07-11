@@ -98,6 +98,10 @@ export default function PromptDetail({
 
   const { prompt, grading, audit } = data;
   const isRetire = grading?.grade === "RETIRE";
+  // Proof the app is not an LLM wrapper: a high-severity risk forces RETIRE via a
+  // deterministic policy gate that overrides whatever the model returned (true in
+  // both the live and offline paths). Surface who actually made the call.
+  const highRisk = grading?.risks_found.find((r) => r.severity === "high");
   // Provenance of trust, shown honestly: a human "override" in the audit trail
   // means a named human adjudicated; otherwise the verdict is AI-graded only.
   const humanReviewed = audit.some((a) => a.action === "override");
@@ -128,6 +132,11 @@ export default function PromptDetail({
       {isRetire && (
         <div className="panel border-retire/40 px-3 py-2 text-sm">
           <p className="text-retire">{t("pd.quarantined_line")}</p>
+          {highRisk && (
+            <p className="mt-1 font-mono text-xs text-muted-2">
+              {t("pd.policy_forced", { category: highRisk.category })}
+            </p>
+          )}
           <p className="mt-1 text-muted">{t("pd.now_what_retire")}</p>
         </div>
       )}

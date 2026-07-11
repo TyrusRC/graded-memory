@@ -1,0 +1,18 @@
+# Render blueprint — FastAPI backend on the free web-service tier (no card).
+# Connect this repo in the Render dashboard; it reads this file.
+# The frontend is hosted separately on Firebase and calls this service via VITE_API_BASE.
+services:
+  - type: web
+    name: graded-memory-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: singapore
+    buildCommand: "pip install . && python scripts/seed_offline.py"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      # Deterministic grading in the cloud: no Gemini key, no free-tier quota to burn.
+      - key: GM_OFFLINE
+        value: "1"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
