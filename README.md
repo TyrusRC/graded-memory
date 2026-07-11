@@ -1,11 +1,29 @@
 # Graded Memory
 
-A quality-and-safety gate for an organization's AI prompts. It grades each prompt
-KEEP / REVISE / RETIRE, quarantines the unsafe ones, and keeps an append-only record
-of every grade and human override — so inherited prompts are trustworthy on day one
-and there is evidence they were reviewed before reuse.
+**The capability layer that captures an organization's AI knowledge, certifies what's
+safe, and hands it forward** — so individual learning becomes permanent organizational
+capability. It captures prompts, workflows, and agent configs into one searchable
+memory, grades each **KEEP / REVISE / RETIRE**, surfaces verified prior art when someone
+starts a new task, maps where capability is growing / duplicated / missing, and keeps an
+append-only record of every grade and human override.
 
-Personal project. Synthetic data only. Runs offline with no API key.
+Built for **Problem 5 — Organizational AI Memory** (AABW Founder Mode). Synthetic data
+only. Runs fully offline with no API key.
+
+**Live demo:** https://graded-memory.web.app · **API:** https://graded-memory-api.onrender.com
+
+## The capability layer
+
+- **Capture** — prompts, **workflows, and agent configs** as first-class assets, each
+  able to carry a "why it worked / when to use it" note so the reasoning transfers too.
+- **Certify** — every asset graded KEEP / REVISE / RETIRE; unsafe ones quarantined; a
+  one-click remediation rewrites and re-grades.
+- **Reuse** — start a task and the org's verified prior art surfaces instantly.
+- **Capability map** — where AI capability is growing, duplicated (near-duplicate
+  clusters), or missing (tags with no certified asset).
+- **Hand forward** — a new hire inherits a clean, certified library on day one.
+- **Compound** — each human override tunes the grader to the org's risk posture and
+  re-grades every similar asset.
 
 ## How it works
 
@@ -52,26 +70,31 @@ secrets and PII out of any offshore model call.
 ## Architecture
 
 **Backend** — Python (>= 3.11), FastAPI, SQLite, and any OpenAI-compatible LLM via the
-`openai` client. The LLM is bring-your-own-key and provider-agnostic: point it at any
-OpenAI-compatible endpoint (OpenAI, Qwen, Groq, DeepSeek, Mistral, Together, local
-Ollama/vLLM, …) — or at OpenRouter to reach every other model (Claude, Gemini, Llama,
-300+) through one interface. With no key, grading runs deterministically offline.
+`openai` client. The LLM is bring-your-own-key and provider-agnostic, with one-click
+presets for OpenAI, Google Gemini, Qwen, Groq, DeepSeek, Mistral, Together, and
+OpenRouter (a universal gateway to Claude, Llama, and 300+ models) — plus a custom
+option for any other endpoint incl. local Ollama/vLLM. With no key, grading, reuse, and
+the capability map all run deterministically offline.
 
 ```
 backend/app/
-  collector.py     discover prompts from a source tree
+  collector.py     discover prompts/workflows/agents from a source tree
   risk_scan.py     deterministic scanner (regex + entropy) + redaction
   judge.py         LLM rubric grade, grounded by the scanner, with the safety gate
   offline_judge.py deterministic grader (no API key)
   live.py          live grade/remediate with automatic offline fallback
   remediation.py   rewrite an unsafe prompt and re-grade
+  reuse.py         deterministic similarity — surface verified prior art
+  analytics.py     capability map: coverage, duplicate clusters, gaps
   calibration.py   apply a human override and recalibrate similar prompts
   control_map.py   map a verdict + risks to named controls
+  llm.py           OpenAI-compatible BYOK adapter + SSRF guard + health ping
   db.py            SQLite persistence + audit log
   main.py          FastAPI routes
 ```
 
-**Frontend** — React, Vite, TypeScript, Tailwind. English / Vietnamese.
+**Frontend** — React, Vite, TypeScript, Tailwind; a Capability analytics view, a
+bring-your-own-key panel with a live green/grey status dot, and English / Vietnamese UI.
 
 ## Run
 
@@ -84,7 +107,7 @@ Backend:
 cd backend
 python -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]"
-python scripts/seed_offline.py     # seeds 26 synthetic prompts (16 KEEP / 5 REVISE / 5 RETIRE)
+python scripts/seed_offline.py     # seeds 34 synthetic assets (23 KEEP / 6 REVISE / 5 RETIRE)
 uvicorn app.main:app --port 8000
 ```
 
@@ -112,20 +135,26 @@ safety gate overrides the model on high-severity risks.
 
 ```
 GET  /api/library                library with grades
-GET  /api/newhire                KEEP-only prompts (safe to hand off)
-GET  /api/prompt/{id}            prompt detail + audit trail
+GET  /api/newhire                KEEP-only assets (safe to hand off)
+GET  /api/prompt/{id}            asset detail + audit trail
 GET  /api/audit                  audit log
 GET  /api/audit/export.csv       audit log as CSV
 GET  /api/calibration            learned calibration rules
-POST /api/grade                  grade a pasted prompt
+GET  /api/analytics              capability map (by kind, coverage, duplicates, gaps)
+GET  /api/llm/status             live provider health for the green dot
+POST /api/reuse                  surface verified prior art for a task
+POST /api/grade                  grade a pasted asset (optional kind + context)
 POST /api/remediate/{id}         rewrite and re-grade
 POST /api/override               human override + recalibrate
 ```
 
+LLM config is passed per-request via `X-LLM-Base-Url` / `X-LLM-Api-Key` / `X-LLM-Model`
+headers (bring-your-own-key) and is never stored server-side.
+
 ## Tests
 
 ```bash
-cd backend && . .venv/bin/activate && python -m pytest      # 28 tests
+cd backend && . .venv/bin/activate && python -m pytest      # 45 tests
 ```
 
 Frontend type-check and build:
@@ -136,13 +165,16 @@ cd frontend && npm run build
 
 ## Status
 
-Built: the grade / remediate / reuse loop, the four-dimension rubric with per-dimension
-reasoning, the deterministic safety gate and quarantine, redact-before-model, the
-append-only audit log mapped to a named control, human override with recalibration,
-and English/Vietnamese UI.
+Built: capture of prompts / workflows / agents as first-class assets with per-asset
+context; the grade / remediate loop; the four-dimension rubric with per-dimension
+reasoning; the deterministic safety gate and quarantine; redact-before-model; the
+reuse (prior-art) surface; the capability map (coverage, duplicate clusters, gaps);
+the append-only audit log mapped to named controls; human override with recalibration;
+provider-agnostic bring-your-own-key with a live health indicator and offline fallback;
+and English / Vietnamese UI. Deployed live (Firebase + Render), 45 tests green.
 
 Not yet built: measured judge reliability on a labeled evaluation set, automatic
-outcome capture, verdict expiration, and CI-level enforcement.
+outcome capture, verdict expiration, versioning/lineage, and CI-level enforcement.
 
 ## Data and safety
 
