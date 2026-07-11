@@ -23,7 +23,8 @@ class DB:
               id TEXT PRIMARY KEY, source TEXT, raw_text TEXT, tags TEXT);
             CREATE TABLE IF NOT EXISTS gradings(
               prompt_id TEXT, grade TEXT, rubric TEXT, rationale TEXT,
-              risks TEXT, control_map TEXT, model TEXT, ts TEXT);
+              risks TEXT, control_map TEXT, model TEXT, ts TEXT,
+              foreseen TEXT DEFAULT '[]');
             CREATE TABLE IF NOT EXISTS overrides(
               prompt_id TEXT, from_grade TEXT, to_grade TEXT, reason TEXT, actor TEXT, ts TEXT);
             CREATE TABLE IF NOT EXISTS audit_log(
@@ -32,6 +33,10 @@ class DB:
             CREATE TABLE IF NOT EXISTS calibration(
               id INTEGER PRIMARY KEY AUTOINCREMENT, pattern TEXT, rule TEXT, ts TEXT);
             """)
+            # Migration: add foreseen_actions to a gradings table created before it existed.
+            cols = {row["name"] for row in c.execute("PRAGMA table_info(gradings)")}
+            if "foreseen" not in cols:
+                c.execute("ALTER TABLE gradings ADD COLUMN foreseen TEXT DEFAULT '[]'")
 
     # --- prompts ---
     def upsert_prompt(self, p: Prompt) -> None:
@@ -54,10 +59,14 @@ class DB:
     # --- gradings ---
     def save_grading(self, g: Grading) -> None:
         with self._conn() as c:
-            c.execute("INSERT INTO gradings VALUES (?,?,?,?,?,?,?,?)",
-                      (g.prompt_id, g.grade, g.rubric.model_dump_json(), g.rationale,
-                       json.dumps([r.model_dump() for r in g.risks_found]),
-                       json.dumps(g.control_map), g.model, _now()))
+            c.execute(
+                "INSERT INTO gradings"
+                " (prompt_id, grade, rubric, rationale, risks, control_map, model, ts, foreseen)"
+                " VALUES (?,?,?,?,?,?,?,?,?)",
+                (g.prompt_id, g.grade, g.rubric.model_dump_json(), g.rationale,
+                 json.dumps([r.model_dump() for r in g.risks_found]),
+                 json.dumps(g.control_map), g.model, _now(),
+                 json.dumps(g.foreseen_actions)))
 
     def latest_grading(self, pid: str) -> Grading | None:
         with self._conn() as c:
@@ -69,7 +78,8 @@ class DB:
                        rubric=RubricScores.model_validate_json(r["rubric"]),
                        rationale=r["rationale"],
                        risks_found=[RiskHit(**x) for x in json.loads(r["risks"])],
-                       control_map=json.loads(r["control_map"]), model=r["model"])
+                       control_map=json.loads(r["control_map"]), model=r["model"],
+                       foreseen_actions=json.loads(r["foreseen"] or "[]"))
 
     def list_latest_gradings(self) -> list[Grading]:
         return [g for p in self.list_prompts() if (g := self.latest_grading(p.id))]

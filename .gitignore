@@ -16,6 +16,10 @@ venv/
 node_modules/
 dist/
 
+# Firebase Hosting local cache / deploy artifacts
+.firebase/
+firebase-debug.log
+
 # Local working docs (kept out of the repo by request)
 docs/
 

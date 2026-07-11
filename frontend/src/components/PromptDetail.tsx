@@ -181,6 +181,26 @@ export default function PromptDetail({
             </p>
           </section>
 
+          {grading.foreseen_actions.length > 0 && (
+            <section>
+              <h3 className="eyebrow mb-2">
+                <Term term={t("pd.foreseen_actions")}>
+                  {t("pd.foreseen_actions_help")}
+                </Term>
+              </h3>
+              <ol className="space-y-1.5">
+                {grading.foreseen_actions.map((a, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-paper/90">
+                    <span className="font-mono text-xs text-muted-2">
+                      {i + 1}.
+                    </span>
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
           {grading.risks_found.length > 0 && (
             <section>
               <h3 className="eyebrow mb-2">{t("pd.risks_found")}</h3>

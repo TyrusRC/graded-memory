@@ -6,6 +6,7 @@ import PromptDetail from "./components/PromptDetail";
 import Governance from "./components/Governance";
 import Calibration from "./components/Calibration";
 import NewHire from "./components/NewHire";
+import LlmSettings from "./components/LlmSettings";
 import { Spinner } from "./components/ui";
 import { useT, useLang, type Lang } from "./i18n";
 
@@ -99,7 +100,8 @@ export default function App() {
               </button>
             ))}
           </nav>
-          <div className="ml-auto flex gap-1">
+          <div className="ml-auto flex items-center gap-2">
+            <LlmSettings />
             {LANGS.map((l) => (
               <button
                 key={l}

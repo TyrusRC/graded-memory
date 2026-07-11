@@ -78,6 +78,14 @@ const DICT: Record<string, { en: string; vi: string }> = {
     vi: "Khắc phục thất bại",
   },
   "pd.rationale": { en: "Rationale", vi: "Lý do" },
+  "pd.foreseen_actions": {
+    en: "Foreseen agent actions",
+    vi: "Hành động agent dự đoán",
+  },
+  "pd.foreseen_actions_help": {
+    en: "The step-by-step action chain the agentic Judge reasoned an autonomous agent would execute if it ran this prompt — the risk is in what it would DO, not just the wording.",
+    vi: "Chuỗi hành động từng bước mà Bộ chấm agentic suy luận rằng một agent tự động sẽ thực thi nếu chạy prompt này — rủi ro nằm ở việc nó SẼ LÀM gì, không chỉ ở câu chữ.",
+  },
   "pd.risks_found": { en: "Risks found", vi: "Rủi ro phát hiện" },
   "pd.control_map": { en: "Control map", vi: "Ánh xạ kiểm soát" },
   "pd.control_map_help": {
@@ -166,6 +174,37 @@ const DICT: Record<string, { en: string; vi: string }> = {
   "nh.load_failed": { en: "Failed to load", vi: "Không tải được" },
 
   "common.loading": { en: "Loading…", vi: "Đang tải…" },
+
+  "llm.checking": { en: "Checking…", vi: "Đang kiểm tra…" },
+  "llm.live": { en: "Live", vi: "Trực tiếp" },
+  "llm.offline": { en: "Offline", vi: "Ngoại tuyến" },
+  "llm.unreachable": { en: "Unreachable", vi: "Không kết nối" },
+  "llm.title": { en: "Live grading (your key)", vi: "Chấm trực tiếp (khóa của bạn)" },
+  "llm.intro": {
+    en: "Bring your own key for live agentic grading — pick a provider, or use OpenRouter to reach any model (Claude, Gemini, Llama, 300+). Leave blank to grade deterministically offline.",
+    vi: "Dùng khóa của bạn để chấm agentic trực tiếp — chọn nhà cung cấp, hoặc dùng OpenRouter để truy cập mọi mô hình (Claude, Gemini, Llama, hơn 300). Để trống sẽ chấm tất định ngoại tuyến.",
+  },
+  "llm.provider": { en: "Provider", vi: "Nhà cung cấp" },
+  "llm.base_url": { en: "Base URL", vi: "Base URL" },
+  "llm.api_key": { en: "API key", vi: "Khóa API" },
+  "llm.model": { en: "Model", vi: "Mô hình" },
+  "llm.save_test": { en: "Save & test", vi: "Lưu & kiểm tra" },
+  "llm.status_online": {
+    en: "Connected — grading live with {model}.",
+    vi: "Đã kết nối — chấm trực tiếp bằng {model}.",
+  },
+  "llm.status_error": {
+    en: "Not reachable ({error}). Still grading safely offline.",
+    vi: "Không kết nối được ({error}). Vẫn chấm an toàn ngoại tuyến.",
+  },
+  "llm.status_offline": {
+    en: "No key set — grading deterministically offline. Add a provider for live agentic grading.",
+    vi: "Chưa đặt khóa — chấm tất định ngoại tuyến. Thêm nhà cung cấp để chấm agentic trực tiếp.",
+  },
+  "llm.privacy": {
+    en: "Your key stays in this browser and is sent per-request only to grade — never stored or logged on the server. Prompts are redacted before any model call.",
+    vi: "Khóa của bạn chỉ nằm trong trình duyệt này và chỉ gửi theo từng yêu cầu để chấm — không lưu hay ghi log trên máy chủ. Prompt được che thông tin nhạy cảm trước mọi lần gọi mô hình.",
+  },
 };
 
 const LangContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({

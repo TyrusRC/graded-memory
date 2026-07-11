@@ -22,6 +22,16 @@ export interface Grading {
   risks_found: RiskHit[];
   control_map: string[];
   model: string;
+  // The action chain the agentic Judge foresaw an agent taking; [] offline/passive.
+  foreseen_actions: string[];
+}
+
+export interface LlmStatus {
+  mode: "live" | "offline";
+  online: boolean;
+  configured: boolean;
+  model?: string;
+  error?: string;
 }
 
 export interface Prompt {

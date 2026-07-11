@@ -5,15 +5,26 @@ import type {
   CalibrationRule,
   OverrideResult,
   Grade,
+  LlmStatus,
 } from "./types";
+import { llmHeaders } from "./llm";
 
 // Relative in dev (Vite proxies /api → :8000); absolute in the hosted build,
 // where the frontend (Firebase) calls the backend (Render) cross-origin.
 const BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+// `llm: true` attaches the browser's bring-your-own-key headers so the backend can
+// grade live with the user's own provider; omit for read-only endpoints.
+async function request<T>(
+  path: string,
+  init?: RequestInit & { llm?: boolean },
+): Promise<T> {
+  const headers: Record<string, string> = {
+    ...(init?.body ? { "Content-Type": "application/json" } : {}),
+    ...(init?.llm ? llmHeaders() : {}),
+  };
   const res = await fetch(`${BASE}${path}`, {
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
+    headers,
     ...init,
   });
   if (!res.ok) {
@@ -41,10 +52,17 @@ export const api = {
     request<Row>("/grade", {
       method: "POST",
       body: JSON.stringify({ text }),
+      llm: true,
     }),
 
   remediate: (id: string) =>
-    request<Row>(`/remediate/${encodeURIComponent(id)}`, { method: "POST" }),
+    request<Row>(`/remediate/${encodeURIComponent(id)}`, {
+      method: "POST",
+      llm: true,
+    }),
+
+  // Green-dot health probe: reports whether the configured provider actually answers.
+  llmStatus: () => request<LlmStatus>("/llm/status", { llm: true }),
 
   override: (prompt_id: string, to_grade: Grade, reason: string) =>
     request<OverrideResult>("/override", {

@@ -30,7 +30,11 @@ class Grading(BaseModel):
     rationale: str
     risks_found: list[RiskHit] = []
     control_map: list[str] = []     # e.g. ["EU AI Act Art. 50", "NIST MANAGE", ...]
-    model: str = "gemini-2.5-flash"
+    model: str = "offline-risk-scan"
+    # The action chain the Judge reasoned an agent would take if it executed the
+    # prompt — the agentic risk analysis. Empty for passive/analysis prompts and
+    # for the deterministic offline grader.
+    foreseen_actions: list[str] = []
 
 class Override(BaseModel):
     prompt_id: str

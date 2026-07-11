@@ -51,7 +51,11 @@ secrets and PII out of any offshore model call.
 
 ## Architecture
 
-**Backend** — Python (>= 3.11), FastAPI, SQLite, Google Gemini via `google-genai`.
+**Backend** — Python (>= 3.11), FastAPI, SQLite, and any OpenAI-compatible LLM via the
+`openai` client. The LLM is bring-your-own-key and provider-agnostic: point it at any
+OpenAI-compatible endpoint (OpenAI, Qwen, Groq, DeepSeek, Mistral, Together, local
+Ollama/vLLM, …) — or at OpenRouter to reach every other model (Claude, Gemini, Llama,
+300+) through one interface. With no key, grading runs deterministically offline.
 
 ```
 backend/app/
@@ -92,9 +96,17 @@ npm install
 npm run dev                        # http://localhost:5173, proxies /api to :8000
 ```
 
-Live grading with a real model is optional. Copy `backend/.env.example` to
-`backend/.env` and set `GEMINI_API_KEY`. The key is read only from `.env`, which is
-gitignored.
+Live grading with a real model is optional and bring-your-own-key. Two ways to enable it:
+
+- **Per-user, from the browser** — open the status control in the header (the green/grey
+  dot), pick a provider, and paste your base URL / API key / model. The key stays in your
+  browser and is sent only as a per-request header to grade; it is never stored or logged
+  server-side. This is how the hosted demo stays free — no operator key required.
+- **Operator-wide** — copy `backend/.env.example` to `backend/.env` and set `LLM_BASE_URL`,
+  `LLM_API_KEY`, and `LLM_MODEL`. `.env` is gitignored.
+
+Either way, prompts are redacted locally before any model call, and the deterministic
+safety gate overrides the model on high-severity risks.
 
 ## API
 

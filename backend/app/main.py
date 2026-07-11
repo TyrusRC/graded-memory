@@ -1,18 +1,30 @@
 from __future__ import annotations
 import csv, io, hashlib
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.db import DB
 from app.models import Prompt, Override, AuditEntry
 from app.live import safe_grade, safe_remediate
+from app.llm import LLMConfig, LLMError, has_llm, ping
 from app.calibration import apply_override
 
 db = DB()
 db.init()
 app = FastAPI(title="Graded Memory")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+def llm_cfg(
+    x_llm_base_url: str | None = Header(default=None),
+    x_llm_api_key: str | None = Header(default=None),
+    x_llm_model: str | None = Header(default=None),
+) -> LLMConfig:
+    """Per-request bring-your-own-key config from browser headers. Never stored or logged;
+    used only for this call. Empty header => that field falls back to the operator env default."""
+    return LLMConfig(base_url=x_llm_base_url or None, api_key=x_llm_api_key or None,
+                     model=x_llm_model or None)
 
 def _row(pid: str) -> dict:
     p, g = db.get_prompt(pid), db.latest_grading(pid)
@@ -54,23 +66,35 @@ def calibration():
 class GradeReq(BaseModel):
     text: str
 
+@app.get("/api/llm/status")
+def llm_status(cfg: LLMConfig = Depends(llm_cfg)):
+    """Powers the green dot. Offline (grey) when no provider is configured; probes the
+    configured provider with a tiny call and reports online (green) / error (red)."""
+    if not has_llm(cfg):
+        return {"mode": "offline", "online": False, "configured": False}
+    try:
+        model = ping(cfg)
+        return {"mode": "live", "online": True, "configured": True, "model": model}
+    except LLMError as e:
+        return {"mode": "offline", "online": False, "configured": True, "error": str(e)}
+
 @app.post("/api/grade")
-def live_grade(req: GradeReq):
+def live_grade(req: GradeReq, cfg: LLMConfig = Depends(llm_cfg)):
     pid = "live-" + hashlib.sha1(req.text.encode()).hexdigest()[:8]
     p = Prompt(id=pid, source="live-demo", raw_text=req.text, tags=["live"])
     db.upsert_prompt(p)
-    g = safe_grade(p)
+    g = safe_grade(p, cfg)
     db.save_grading(g)
     db.add_audit(AuditEntry(prompt_id=pid, action="graded", grade=g.grade,
                             detail=f"live; {len(g.risks_found)} risk(s)"))
     return _row(pid)
 
 @app.post("/api/remediate/{pid}")
-def live_remediate(pid: str):
+def live_remediate(pid: str, cfg: LLMConfig = Depends(llm_cfg)):
     p = db.get_prompt(pid)
     if not p:
         raise HTTPException(404)
-    fixed, g = safe_remediate(p)
+    fixed, g = safe_remediate(p, cfg)
     db.upsert_prompt(fixed); db.save_grading(g)
     db.add_audit(AuditEntry(prompt_id=pid, action="remediated", grade=g.grade, detail="rewrite+re-judge"))
     return _row(pid)
