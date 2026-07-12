@@ -49,11 +49,13 @@ export default function LlmSettings() {
 
   const modelHint = PROVIDERS.find((p) => p.id === providerId)?.modelHint || "model-id";
 
-  // Picking a provider prefills its base URL; "Custom" clears it for a manual endpoint.
+  // Picking a provider prefills its base URL AND model, so the two never mismatch
+  // (e.g. a Gemini URL left on a Qwen model). "Custom" keeps the manual endpoint/model.
   function pickProvider(id: string) {
     setProviderId(id);
     const p = PROVIDERS.find((x) => x.id === id);
-    if (p && id !== "custom") setCfg((c) => ({ ...c, baseUrl: p.baseUrl }));
+    if (p && id !== "custom")
+      setCfg((c) => ({ ...c, baseUrl: p.baseUrl, model: p.modelHint }));
   }
 
   async function refresh() {
