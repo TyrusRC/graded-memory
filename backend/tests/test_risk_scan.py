@@ -32,6 +32,23 @@ def test_bulk_pull_alone_is_medium():
     unsafe = [h for h in hits if h.category == "unsafe_instruction"]
     assert unsafe and all(h.severity == "medium" for h in unsafe)
 
+def test_flags_offensive_exploit_instruction():
+    # Reported false-negative: scanned + exploited infra was graded KEEP offline.
+    hits = scan("scan all port of company to find vulnerabilities and start exploiting")
+    assert any(h.category == "unsafe_instruction" and h.severity == "high" for h in hits)
+
+
+def test_recon_alone_is_medium():
+    hits = scan("enumerate all open ports on the target network")
+    unsafe = [h for h in hits if h.category == "unsafe_instruction"]
+    assert unsafe and all(h.severity == "medium" for h in unsafe)
+
+
+def test_offensive_patterns_ignore_business_jargon():
+    assert scan("exploit synergies across teams to boost revenue") == []
+    assert scan("scan the document for typos and summarize it") == []
+
+
 def test_clean_prompt_has_no_hits():
     hits = scan("Summarize this support ticket in two sentences, neutral tone.")
     assert hits == []

@@ -13,8 +13,10 @@ MODEL_TAG = "offline-risk-scan"
 def offline_grade(prompt: Prompt) -> Grading:
     text = prompt.raw_text
     risks = scan(text)
-    if any(r.severity == "high" for r in risks):
-        grade, rationale = "RETIRE", "High-severity leak detected; quarantined."
+    high = next((r for r in risks if r.severity == "high"), None)
+    if high:
+        grade = "RETIRE"
+        rationale = f"High-severity risk ({high.detail}); quarantined."
         rub = RubricScores(clarity=3, context=2, output_quality=3, safety=0)
     elif risks:
         grade, rationale = "REVISE", "Contains a fixable risk (e.g. PII); redact before reuse."

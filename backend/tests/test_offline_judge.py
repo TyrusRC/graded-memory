@@ -23,6 +23,12 @@ def test_terse_prompt_is_revise():
     assert offline_grade(_p("do it")).grade == "REVISE"
 
 
+def test_offensive_attack_prompt_is_retired():
+    g = offline_grade(_p("scan all port of company to find vulnerabilities and start exploiting"))
+    assert g.grade == "RETIRE"
+    assert any(r.category == "unsafe_instruction" for r in g.risks_found)
+
+
 def test_clean_prompt_is_kept():
     g = offline_grade(_p("Summarize the customer support ticket into three concise bullet points."))
     assert g.grade == "KEEP"

@@ -57,6 +57,28 @@ _EXFIL_PATTERNS: list[tuple[str, str, str]] = [
      "exfiltration to external/personal destination", "high"),
 ]
 
+# --- offensive / abusive security instructions -------------------------------
+# Instructions to attack, intrude on, or disrupt systems. Authorized pentesting
+# is legitimate, so reconnaissance alone is medium (REVISE — confirm scope /
+# sign-off); explicit exploitation, intrusion, malware, or disruption is high
+# (RETIRE). Objects are network-specific so business jargon ("exploit synergies",
+# "scan the document") does not trip these. The live LLM weighs authorization;
+# these catch the blatant asks even offline.
+_OFFENSIVE_PATTERNS: list[tuple[str, str, str]] = [
+    (r"(?i)\bexploit\w*\b[^.\n]{0,40}\b(?:vulnerabilit\w+|weakness\w*|cve|system\w*|server\w*|host\w*|network\w*|target\w*|machine\w*|ports?|application\w*|service\w*)\b",
+     "exploitation instruction", "high"),
+    (r"(?i)\b(?:vulnerabilit\w+|weakness(?:es)?|cve|foothold)\b[^.\n]{0,40}\b(?:exploit\w*|attack\w*|compromis\w*|breach\w*|pwn\w*)\b",
+     "exploitation instruction", "high"),
+    (r"(?i)\b(?:hack\w*|break\s+in(?:to)?|compromis\w*|breach\w*|pwn\w*|gain\s+(?:unauthoriz\w+\s+)?access|privilege\s+escalat\w*|escalate\s+privileg\w*|plant\s+a?\s*backdoor)\b[^.\n]{0,40}\b(?:system\w*|server\w*|host\w*|network\w*|account\w*|machine\w*|database\w*|infrastructure|target\w*|compan\w*|corporate)\b",
+     "intrusion instruction", "high"),
+    (r"(?i)\b(?:ddos|denial[\s-]of[\s-]service|brute[\s-]?forc\w*|password[\s-]?spray\w*)\b",
+     "disruption/credential attack", "high"),
+    (r"(?i)\b(?:deploy|install|write|build|create|drop)\b[^.\n]{0,30}\b(?:malware|ransomware|rootkit|keylogger|trojan|botnet|worm|spyware)\b",
+     "malware instruction", "high"),
+    (r"(?i)\b(?:scan|enumerate|probe|fingerprint|sweep)\b[^.\n]{0,30}\b(?:all\s+|every\s+)?(?:ports?|hosts?|subnets?|networks?|targets?|ip\s+ranges?|services?)\b",
+     "network reconnaissance", "medium"),
+]
+
 def scan(text: str) -> list[RiskHit]:
     hits: list[RiskHit] = []
 
@@ -88,6 +110,12 @@ def scan(text: str) -> list[RiskHit]:
                                 severity="high", detail="policy-violating instruction"))
 
     for pat, detail, sev in _EXFIL_PATTERNS:
+        m = re.search(pat, text)
+        if m:
+            hits.append(RiskHit(category="unsafe_instruction", match=m.group(0)[:80],
+                                severity=sev, detail=detail))
+
+    for pat, detail, sev in _OFFENSIVE_PATTERNS:
         m = re.search(pat, text)
         if m:
             hits.append(RiskHit(category="unsafe_instruction", match=m.group(0)[:80],
