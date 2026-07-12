@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CalibrationRule, Grade, Row } from "../types";
 import { api } from "../api";
-import { Spinner, StatusChip, Term } from "./ui";
+import { GradeBadge, Spinner, StatusChip, Term } from "./ui";
 import { useT } from "../i18n";
 
 const GRADES: Grade[] = ["KEEP", "REVISE", "RETIRE"];
@@ -15,6 +15,8 @@ export default function Calibration({ rows }: { rows: Row[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const selected = rows.find((r) => r.prompt.id === promptId);
 
   useEffect(() => {
     if (!promptId && rows.length > 0) setPromptId(rows[0].prompt.id);
@@ -68,6 +70,7 @@ export default function Calibration({ rows }: { rows: Row[] }) {
 
       <section className="panel space-y-4 p-5">
         <h2 className="eyebrow">{t("cal.override_recalibrate")}</h2>
+        <p className="text-sm leading-relaxed text-muted">{t("cal.how")}</p>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block text-sm">
@@ -83,6 +86,9 @@ export default function Calibration({ rows }: { rows: Row[] }) {
                 </option>
               ))}
             </select>
+            <span className="mt-1 block text-xs text-muted-2">
+              {t("cal.add_hint")}
+            </span>
           </label>
 
           <label className="block text-sm">
@@ -100,6 +106,23 @@ export default function Calibration({ rows }: { rows: Row[] }) {
             </select>
           </label>
         </div>
+
+        {selected && (
+          <div className="well space-y-2 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-mono text-xs text-muted">
+                {selected.prompt.source}
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="eyebrow">{t("cal.current_grade")}</span>
+                <GradeBadge grade={selected.grading?.grade ?? null} />
+              </span>
+            </div>
+            <pre className="max-h-40 overflow-auto whitespace-pre-wrap font-mono text-xs text-paper/90">
+              {selected.prompt.raw_text}
+            </pre>
+          </div>
+        )}
 
         <label className="block text-sm">
           <span className="eyebrow mb-1 block">{t("cal.reason")}</span>

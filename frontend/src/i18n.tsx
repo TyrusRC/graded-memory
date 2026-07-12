@@ -30,6 +30,10 @@ const DICT: Record<string, { en: string; vi: string }> = {
     en: "Grade a new prompt",
     vi: "Chấm điểm một prompt mới",
   },
+  "lib.grade_new_help": {
+    en: "Runs the asset through the pipeline now: a deterministic scan redacts any secret/PII, a judge scores it and returns KEEP / REVISE / RETIRE, and a policy gate forces RETIRE on any high-severity risk — no API key required. “Live” means grade now, not “calls an LLM”.",
+    vi: "Chạy tài sản qua pipeline ngay: quét xác định để che secret/PII, một bộ chấm cho điểm và trả về KEEP / REVISE / RETIRE, và cổng chính sách buộc RETIRE với mọi rủi ro nghiêm trọng — không cần API key. “Trực tiếp” nghĩa là chấm ngay, không phải “gọi LLM”.",
+  },
   "lib.paste_placeholder": {
     en: "Paste a prompt to grade it live…",
     vi: "Dán một prompt để chấm điểm trực tiếp…",
@@ -173,7 +177,16 @@ const DICT: Record<string, { en: string; vi: string }> = {
     en: "Override & recalibrate",
     vi: "Ghi đè & hiệu chỉnh",
   },
+  "cal.how": {
+    en: "Disagree with a verdict? Pick the asset, set the grade you believe is correct, and say why. We record the override and re-grade every similar asset the same way — the grader learns your organisation's calibration.",
+    vi: "Không đồng ý với phán quyết? Chọn tài sản, đặt điểm bạn cho là đúng và nêu lý do. Chúng tôi ghi lại ghi đè và chấm lại mọi tài sản tương tự theo cách đó — bộ chấm học theo hiệu chỉnh của tổ chức bạn.",
+  },
   "cal.prompt": { en: "Prompt", vi: "Prompt" },
+  "cal.add_hint": {
+    en: "New asset? Add it on the Library tab with “Grade live” and it appears in this list.",
+    vi: "Tài sản mới? Thêm ở tab Thư viện bằng “Chấm trực tiếp” và nó sẽ xuất hiện trong danh sách này.",
+  },
+  "cal.current_grade": { en: "Current grade", vi: "Điểm hiện tại" },
   "cal.new_grade": { en: "New grade", vi: "Điểm mới" },
   "cal.reason": { en: "Reason", vi: "Lý do" },
   "cal.reason_placeholder": {

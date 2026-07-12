@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Grade, Kind, ReuseMatch, Row } from "../types";
 import { api } from "../api";
-import { GradeBadge, KindBadge, RiskChip, Tag, Spinner } from "./ui";
+import { GradeBadge, KindBadge, RiskChip, Tag, Spinner, Term } from "./ui";
 import { useT } from "../i18n";
 
 type Filter = "ALL" | Grade;
@@ -189,7 +189,9 @@ export default function Library({
   return (
     <div className="space-y-6">
       <section className="panel p-4">
-        <h2 className="eyebrow mb-2">{t("lib.grade_new")}</h2>
+        <h2 className="eyebrow mb-2">
+          <Term term={t("lib.grade_new")}>{t("lib.grade_new_help")}</Term>
+        </h2>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
