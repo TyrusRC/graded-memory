@@ -99,7 +99,7 @@ export default function App() {
             ◈ Graded Memory
           </span>
           <nav className="flex flex-wrap gap-1">
-            {TAB_IDS.map((id) => (
+            {TAB_IDS.filter((id) => id !== "prompt" || selectedId).map((id) => (
               <button
                 key={id}
                 onClick={() => setTab(id)}
