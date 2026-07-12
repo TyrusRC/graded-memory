@@ -42,7 +42,8 @@ def test_safe_grade_falls_back_on_provider_error(monkeypatch):
     def boom(p, cfg=None): raise _quota_error()
     monkeypatch.setattr(live, "grade_prompt", boom)
     g = safe_grade(_p("aws_access_key_id = AKIAIOSFODNN7EXAMPLE ship it"))
-    assert g.model == MODEL_TAG          # deterministic fallback kicked in
+    assert g.model.startswith(MODEL_TAG)  # deterministic fallback kicked in
+    assert "live LLM failed" in g.model   # and the failure is surfaced, not hidden
     assert g.grade == "RETIRE"           # and still caught the secret
 
 
@@ -52,4 +53,4 @@ def test_safe_remediate_falls_back_and_redacts(monkeypatch):
     monkeypatch.setattr(live, "remediate", boom)
     fixed, g = safe_remediate(_p("connect using AKIAIOSFODNN7EXAMPLE to prod"))
     assert "AKIAIOSFODNN7EXAMPLE" not in fixed.raw_text   # secret masked deterministically
-    assert g.model == MODEL_TAG
+    assert g.model.startswith(MODEL_TAG)

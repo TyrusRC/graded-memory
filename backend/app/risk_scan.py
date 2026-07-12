@@ -14,7 +14,16 @@ _SECRET_PATTERNS: list[tuple[str, str]] = [
     (r"-----BEGIN [A-Z ]*PRIVATE KEY-----", "private key block"),
     (r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}", "JWT"),
     (r"(?:postgres|mysql|mongodb|redis)://[^:\s]+:[^@\s]+@[^\s/]+", "DB URI with credentials"),
+    # modern vendor-prefixed keys (specific formats -> negligible false positives)
+    (r"sk-proj-[A-Za-z0-9_-]{16,}", "OpenAI project key"),
+    (r"sk-[A-Za-z0-9]{32,}", "OpenAI API key"),
+    (r"sk_(?:live|test)_[A-Za-z0-9]{16,}", "Stripe secret key"),
+    (r"ghp_[A-Za-z0-9]{36}", "GitHub token"),
+    (r"AIza[A-Za-z0-9_-]{35}", "Google API key"),
     (r"(?i)\b(?:api[_-]?key|secret|token|password)\b\s*[:=]\s*['\"]?[A-Za-z0-9/+_-]{12,}", "hardcoded credential"),
+    # credential stated in prose ("the password is X"): require a mixed digit+letter
+    # value so "the password is required" and similar plain words don't trip it.
+    (r"(?i)\b(?:password|passwd|pwd|secret|api[ _-]?key|access[ _-]?token|token)\b[^.\n]{0,40}?(?:\bis\b|=|:)\s+['\"]?(?=[^\s'\"]*[0-9])(?=[^\s'\"]*[A-Za-z])[^\s'\"]{8,}", "credential in prose"),
 ]
 
 def _shannon(s: str) -> float:
@@ -53,7 +62,7 @@ _UNSAFE = [
 _EXFIL_PATTERNS: list[tuple[str, str, str]] = [
     (r"(?i)\b(?:download|scrape|export|pull|dump|clone|copy|sync|collect|harvest)\b[^.\n]{0,60}\b(?:all|every|entire|bulk|each)\b[^.\n]{0,40}\b(?:docs?|documents?|files?|pages?|repos?|repositories|records?|data|tables?|customers?|users?)\b",
      "bulk data pull", "medium"),
-    (r"(?i)\b(?:push|upload|send|forward|post|exfiltrate|leak|transfer|sync|copy)\b[^.\n]{0,60}\b(?:github|gitlab|bitbucket|dropbox|google\s*drive|gdrive|s3|pastebin|telegram|personal|external|my\s+(?:own\s+)?(?:email|inbox|repo(?:sitory)?|drive|account|server|laptop))\b",
+    (r"(?i)\b(?:push|upload|send|forward|post|exfiltrate|leak|transfer|sync|copy|e-?mail|mail)\b[^.\n]{0,60}\b(?:github|gitlab|bitbucket|dropbox|google\s*drive|gdrive|s3|pastebin|telegram|whatsapp|outlook|hotmail|gmail|proton\w*|icloud|yahoo|gmx|thumb\s*drive|flash\s*drive|usb(?:\s*(?:stick|drive))?|sd\s*card|competitor|rival|recruiter|personal|external|(?:my|private)\s+(?:own\s+)?(?:email|inbox|repo(?:sitory)?|drive|account|server|laptop|address))\b",
      "exfiltration to external/personal destination", "high"),
 ]
 
@@ -77,6 +86,44 @@ _OFFENSIVE_PATTERNS: list[tuple[str, str, str]] = [
      "malware instruction", "high"),
     (r"(?i)\b(?:scan|enumerate|probe|fingerprint|sweep)\b[^.\n]{0,30}\b(?:all\s+|every\s+)?(?:ports?|hosts?|subnets?|networks?|targets?|ip\s+ranges?|services?)\b",
      "network reconnaissance", "medium"),
+]
+
+# --- other abusive / policy-violating instructions ---------------------------
+# Whole classes an agentic prompt library must quarantine: destructive data ops
+# beyond DROP/DELETE, jailbreak/prompt-injection variants, social engineering,
+# compliance-control bypass, and moving regulated data off-perimeter. Objects are
+# scoped so ordinary business phrasing ("overwrite the draft file", "pretend to be
+# a helpful support agent") does not trip these. All high -> RETIRE.
+_ABUSE_PATTERNS: list[tuple[str, str, str]] = [
+    # destructive data / infrastructure operations
+    (r"(?i)\btruncate\s+table\b", "destructive data operation", "high"),
+    (r"(?i)\b(?:delete|update)\b[^.\n]{0,40}\bwhere\s+1\s*=\s*1\b", "destructive data operation", "high"),
+    (r"(?i)\brm\s+-rf\b|\bmkfs\b|\bdd\s+if=|>\s*/dev/sd", "destructive shell command", "high"),
+    (r"(?i)\b(?:wipe|erase|purge|destroy|nuke|obliterate|overwrite)\b[^.\n]{0,30}\b(?:records?|databases?|users?|accounts?|tables?|backups?|balances?|column)\b", "destructive data operation", "high"),
+    (r"(?i)\b(?:reset|restore)\b[^.\n]{0,20}\bfactory\b", "destructive reset", "high"),
+    # prompt injection / jailbreak (beyond 'ignore previous instructions')
+    (r"(?i)\b(?:disregard|forget|override|ignore|bypass)\b[^.\n]{0,25}\b(?:instructions?|rules?|guidelines?|policy|policies|prompt|restrictions?)\b", "jailbreak / prompt injection", "high"),
+    (r"(?i)\bdeveloper\s+mode\b|\bjailbr(?:oken|eak)\b|\bunfiltered\b", "jailbreak / prompt injection", "high"),
+    (r"(?i)\bno\s+(?:content\s+)?(?:policy|rules|restrictions|filter|guardrails)\b", "jailbreak / prompt injection", "high"),
+    (r"(?i)\brestrictions?\s+(?:are\s+)?(?:lifted|removed|disabled|turned\s+off|off)\b", "jailbreak / prompt injection", "high"),
+    (r"(?i)\bwithout\s+(?:any\s+)?(?:filter|restriction|censorship|guardrails?)\b", "jailbreak / prompt injection", "high"),
+    (r"(?i)\b(?:pretend|assume|imagine)\b[^.\n]{0,30}\b(?:safety|guidelines?|rules?|policy|restrictions?)\b[^.\n]{0,20}\b(?:do\s+not|don'?t|no\s+longer|never)\b", "jailbreak / prompt injection", "high"),
+    # social engineering / phishing / credential harvesting
+    (r"(?i)\bphishing\b|\bspear[\s-]?phish\w*\b", "social engineering / phishing", "high"),
+    (r"(?i)\bimpersonat\w+\b", "impersonation / social engineering", "high"),
+    (r"(?i)\bfake\s+(?:login|sign[\s-]?in|portal|page|website)\b", "credential-harvesting page", "high"),
+    (r"(?i)\b(?:harvest|capture|steal|phish|grab)\b[^.\n]{0,25}\b(?:credentials?|passwords?|logins?|otp|2fa)\b", "credential theft", "high"),
+    (r"(?i)\b(?:pretend\w*\s+to\s+be|pos(?:e|ing)\s+as)\b[^.\n]{0,60}\b(?:reset|password|credentials?|wire\s+transfer|gain\s+access|verify\s+(?:the\s+)?account)\b", "pretexting / social engineering", "high"),
+    # offensive post-exploitation
+    (r"(?i)\blateral\s+movement\b|\bpass[\s-]the[\s-](?:hash|ticket)\b|\bprivilege\s+escalat\w+\b", "offensive post-exploitation", "high"),
+    # compliance / control bypass
+    (r"(?i)\b(?:skip|bypass|omit|ignore|circumvent|disable|avoid)\b[^.\n]{0,25}\b(?:kyc|aml|identity\s+verification|due\s+diligence|sanctions?\s+(?:screening|check|list)|compliance\s+(?:check|review)|background\s+check)\b", "compliance / control bypass", "high"),
+    # regulated / personal data moved to a third party
+    (r"(?i)\b(?:share|send|disclose|hand\s+over|give|upload|export|email|sell|provide)\b[^.\n]{0,50}\b(?:medical|patient|health|phi|pii|ssn|social\s+security|customer\s+(?:data|records?|pii|list)|personal\s+data|payroll)\b[^.\n]{0,50}\b(?:third[\s-]?party|external|vendor|startup|partner|competitor|rival|another\s+company)\b", "regulated data to third party", "high"),
+    # mass collection of sensitive identifiers
+    (r"(?i)\b(?:compile|collect|gather|list|extract|scrape|pull|build\s+a\s+list\s+of)\b[^.\n]{0,50}\b(?:ssn|social\s+security|home\s+address(?:es)?|dates?\s+of\s+birth|dob|passport|hiv|diagnos\w+)\b", "mass sensitive-data collection", "high"),
+    # physical exfiltration channel
+    (r"(?i)\b(?:print(?:\s*out)?|take|carry|walk\s+out|smuggle|remove)\b[^.\n]{0,45}\b(?:home|off[\s-]?site|out\s+of\s+the\s+(?:office|company|building)|thumb\s*drive|flash\s*drive|usb\s*(?:stick|drive)?|sd\s*card)\b", "physical exfiltration", "high"),
 ]
 
 def scan(text: str) -> list[RiskHit]:
@@ -116,6 +163,12 @@ def scan(text: str) -> list[RiskHit]:
                                 severity=sev, detail=detail))
 
     for pat, detail, sev in _OFFENSIVE_PATTERNS:
+        m = re.search(pat, text)
+        if m:
+            hits.append(RiskHit(category="unsafe_instruction", match=m.group(0)[:80],
+                                severity=sev, detail=detail))
+
+    for pat, detail, sev in _ABUSE_PATTERNS:
         m = re.search(pat, text)
         if m:
             hits.append(RiskHit(category="unsafe_instruction", match=m.group(0)[:80],

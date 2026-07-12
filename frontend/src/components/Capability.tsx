@@ -58,7 +58,7 @@ export default function Capability() {
       <section>
         <h3 className="eyebrow mb-3">{t("cap.coverage")}</h3>
         {data.by_tag.length === 0 ? (
-          <p className="text-sm text-muted">{t("lib.no_match")}</p>
+          <p className="text-sm text-muted">{t("cap.coverage_none")}</p>
         ) : (
           <div className="panel overflow-x-auto">
             <table className="w-full text-sm">

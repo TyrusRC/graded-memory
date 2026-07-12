@@ -59,6 +59,12 @@ export default function App() {
     });
   }
 
+  // After an override recalibrates similar assets, re-pull the library so the new
+  // grades show immediately (otherwise the "re-graded N" toast looks like a no-op).
+  function refreshLibrary() {
+    api.library().then(setRows).catch(() => {});
+  }
+
   function selectPrompt(id: string) {
     setSelectedId(id);
     setTab("prompt");
@@ -83,7 +89,7 @@ export default function App() {
       case "governance":
         return <Governance />;
       case "calibration":
-        return <Calibration rows={rows} />;
+        return <Calibration rows={rows} onChanged={refreshLibrary} />;
       case "newhire":
         return <NewHire onSelect={selectPrompt} />;
       case "capability":

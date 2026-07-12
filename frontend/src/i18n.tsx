@@ -241,7 +241,11 @@ const DICT: Record<string, { en: string; vi: string }> = {
   },
   "cap.by_kind": { en: "Assets by kind", vi: "Tài sản theo loại" },
   "cap.coverage": { en: "Coverage by tag", vi: "Độ phủ theo thẻ" },
+  "cap.coverage_none": { en: "No tagged assets yet.", vi: "Chưa có tài sản gắn thẻ." },
   "cap.col_tag": { en: "Tag", vi: "Thẻ" },
+  "status.built": { en: "BUILT", vi: "ĐÃ XÂY DỰNG" },
+  "status.planned": { en: "PLANNED", vi: "DỰ KIẾN" },
+  "status.concept": { en: "DEMONSTRATED CONCEPT", vi: "Ý TƯỞNG MINH HỌA" },
   "cap.col_total": { en: "Total", vi: "Tổng" },
   "cap.duplicates": { en: "Duplicated capability", vi: "Năng lực trùng lặp" },
   "cap.duplicates_none": {

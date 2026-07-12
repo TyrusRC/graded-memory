@@ -64,16 +64,16 @@ export function KindBadge({ kind }: { kind: Kind }) {
   return <span className={`tag ${KIND_TONE[kind]}`}>{t(`kind.${kind}`)}</span>;
 }
 
-const STATUS_META = {
-  built: { label: "BUILT", tone: "text-keep" },
-  planned: { label: "PLANNED", tone: "text-muted" },
-  concept: { label: "DEMONSTRATED CONCEPT", tone: "text-revise" },
+const STATUS_TONE = {
+  built: "text-keep",
+  planned: "text-muted",
+  concept: "text-revise",
 } as const;
 
 // Candor as a product property: label what is real vs. planned, honestly.
-export function StatusChip({ status }: { status: keyof typeof STATUS_META }) {
-  const s = STATUS_META[status];
-  return <span className={`tag ${s.tone}`}>{s.label}</span>;
+export function StatusChip({ status }: { status: keyof typeof STATUS_TONE }) {
+  const t = useT();
+  return <span className={`tag ${STATUS_TONE[status]}`}>{t(`status.${status}`)}</span>;
 }
 
 // Single newcomer aid: click-to-reveal glossary (no hover — projector-safe).

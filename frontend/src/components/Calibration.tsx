@@ -6,7 +6,13 @@ import { useT } from "../i18n";
 
 const GRADES: Grade[] = ["KEEP", "REVISE", "RETIRE"];
 
-export default function Calibration({ rows }: { rows: Row[] }) {
+export default function Calibration({
+  rows,
+  onChanged,
+}: {
+  rows: Row[];
+  onChanged: () => void;
+}) {
   const t = useT();
   const [promptId, setPromptId] = useState("");
   const [grade, setGrade] = useState<Grade>("KEEP");
@@ -43,6 +49,7 @@ export default function Calibration({ rows }: { rows: Row[] }) {
       );
       setReason("");
       loadRules();
+      onChanged();   // refresh library grades so the recalibration is visible immediately
     } catch (e) {
       setError(e instanceof Error ? e.message : t("cal.override_failed"));
     } finally {
