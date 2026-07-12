@@ -51,9 +51,9 @@ _UNSAFE = [
 # the live LLM reasons about the subtle cases, these catch the blatant ones
 # even offline. (severity: bulk pull -> medium/REVISE; exfiltration -> high/RETIRE)
 _EXFIL_PATTERNS: list[tuple[str, str, str]] = [
-    (r"(?i)\b(?:download|scrape|export|pull|dump|clone|copy|sync|collect|harvest)\b[^.\n]{0,40}\b(?:all|every|entire|bulk|each)\b[^.\n]{0,30}\b(?:docs?|documents?|files?|pages?|repos?|repositories|records?|data|tables?|customers?|users?)\b",
+    (r"(?i)\b(?:download|scrape|export|pull|dump|clone|copy|sync|collect|harvest)\b[^.\n]{0,60}\b(?:all|every|entire|bulk|each)\b[^.\n]{0,40}\b(?:docs?|documents?|files?|pages?|repos?|repositories|records?|data|tables?|customers?|users?)\b",
      "bulk data pull", "medium"),
-    (r"(?i)\b(?:push|upload|send|forward|post|exfiltrate|leak|transfer|sync|copy)\b[^.\n]{0,40}\b(?:github|gitlab|bitbucket|dropbox|google\s*drive|gdrive|s3|pastebin|telegram|personal|external|my\s+(?:own\s+)?(?:email|inbox|repo(?:sitory)?|drive|account|server|laptop))\b",
+    (r"(?i)\b(?:push|upload|send|forward|post|exfiltrate|leak|transfer|sync|copy)\b[^.\n]{0,60}\b(?:github|gitlab|bitbucket|dropbox|google\s*drive|gdrive|s3|pastebin|telegram|personal|external|my\s+(?:own\s+)?(?:email|inbox|repo(?:sitory)?|drive|account|server|laptop))\b",
      "exfiltration to external/personal destination", "high"),
 ]
 

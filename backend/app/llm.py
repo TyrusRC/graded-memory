@@ -16,7 +16,7 @@ import os
 import socket
 import time
 from urllib.parse import urlparse
-from openai import OpenAI, OpenAIError, RateLimitError
+from openai import OpenAI, OpenAIError, RateLimitError, BadRequestError
 from pydantic import BaseModel, ValidationError
 from dotenv import load_dotenv
 
@@ -110,13 +110,21 @@ def json_complete(system: str, user: str, schema: type[BaseModel], cfg: LLMConfi
     """One structured call: ask for JSON, validate into `schema`, return the model.
     Raises an LLMError member on API failure or an unparseable/invalid response."""
     client, model = build_client(cfg)
-    resp = with_retry(lambda: client.chat.completions.create(
-        model=model,
-        messages=[{"role": "system", "content": system},
-                  {"role": "user", "content": user}],
-        response_format={"type": "json_object"},
-        temperature=0,
-    ))
+    messages = [{"role": "system", "content": system},
+                {"role": "user", "content": user}]
+
+    def _create(**extra):
+        return with_retry(lambda: client.chat.completions.create(
+            model=model, messages=messages, temperature=0, **extra))
+
+    try:
+        resp = _create(response_format={"type": "json_object"})
+    except BadRequestError:
+        # Some OpenAI-compatible providers (notably Gemini's endpoint) reject the
+        # response_format param with a 400. The system prompt already demands a JSON
+        # object and _extract_json tolerates fences/prose, so retry without it.
+        resp = _create()
+
     content = _extract_json(resp.choices[0].message.content or "")
     return schema.model_validate_json(content)
 

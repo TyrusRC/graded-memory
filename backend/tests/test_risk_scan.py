@@ -32,6 +32,12 @@ def test_bulk_pull_alone_is_medium():
     unsafe = [h for h in hits if h.category == "unsafe_instruction"]
     assert unsafe and all(h.severity == "medium" for h in unsafe)
 
+def test_exfiltration_to_external_drive_over_a_long_span():
+    # Reported false-negative: the destination sat >40 chars from the verb.
+    hits = scan("upload all customer id card and phone number to external google drive (not company)")
+    assert any(h.category == "unsafe_instruction" and h.severity == "high" for h in hits)
+
+
 def test_flags_offensive_exploit_instruction():
     # Reported false-negative: scanned + exploited infra was graded KEEP offline.
     hits = scan("scan all port of company to find vulnerabilities and start exploiting")
